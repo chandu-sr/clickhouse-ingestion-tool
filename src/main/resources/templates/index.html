@@ -1,0 +1,62 @@
+<!-- src/main/resources/templates/index.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${title}">ClickHouse Ingestion Tool</title>
+</head>
+<body>
+<h1 th:text="${title}">ClickHouse ↔ Flat File Ingestion Tool</h1>
+
+<!-- Show status message -->
+<div th:if="${message}">
+    <p th:text="${message}"></p>
+</div>
+
+<!-- STEP 1: Upload CSV + connection info -->
+<form method="post" action="/preview-columns" enctype="multipart/form-data">
+    <label>Direction:</label>
+    <select name="direction" required>
+        <option value="csv-to-clickhouse">CSV to ClickHouse</option>
+    </select>
+    <br/><br/>
+
+    <label>CSV File:</label>
+    <input type="file" name="file" required/>
+    <br/><br/>
+
+    <label>ClickHouse URL:</label>
+    <input type="text" name="clickhouseUrl" value="http://localhost:8123" required/>
+    <br/><br/>
+
+    <label>JWT Token (optional):</label>
+    <input type="text" name="jwt"/>
+    <br/><br/>
+
+    <button type="submit">Next: Choose Columns</button>
+</form>
+
+<hr/>
+
+<!-- STEP 2: Show only if headers and fileName exist -->
+<div th:if="${headers != null} and ${fileName != null}">
+    <form method="post" action="/ingest">
+        <input type="hidden" name="direction" th:value="${direction}"/>
+        <input type="hidden" name="clickhouseUrl" th:value="${clickhouseUrl}"/>
+        <input type="hidden" name="jwt" th:value="${jwt}"/>
+        <input type="hidden" name="fileName" th:value="${fileName}"/>
+
+        <p>Select columns to ingest:</p>
+        <div th:each="header : ${headers}">
+            <label>
+                <input type="checkbox" name="selectedColumns" th:value="${header}" checked/>
+                <span th:text="${header}">Column</span>
+            </label><br/>
+        </div>
+
+        <br/>
+        <button type="submit">Ingest Selected Columns</button>
+    </form>
+</div>
+
+</body>
+</html>

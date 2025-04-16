@@ -1,0 +1,18 @@
+prompts.txt
+
+Prompts used with ChatGPT to complete the ClickHouse ↔ Flat File Ingestion Tool assignment:
+
+1. How to parse CSV in Spring Boot using Apache Commons CSV?
+2. How to send POST request to ClickHouse from Java using HttpURLConnection?
+3. How to extract headers from a CSV file and display them in a Thymeleaf form?
+4. How to build a two-step form in Spring Boot for column selection?
+5. How to quote string values but not numeric values when generating SQL?
+6. How to show success/error messages in Spring Boot web app?
+7. How to handle multipart file uploads in Spring MVC?
+8. How to implement Basic Authentication in HTTP header using Java?
+9. How to show record count after insertion?
+10. How to write a complete GitHub README.md file for a Spring Boot project?
+11. How to fix "Type mismatch in ClickHouse: Expected UInt32, got String" error?
+12. How to set up ClickHouse on WSL using Ubuntu?
+13. How to debug connection refused and 500 error in ClickHouse ingestion?
+14. How to organize controller code and extract selected columns safely?
