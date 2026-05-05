@@ -21,7 +21,7 @@ This is a full-stack Spring Boot-based web application that allows users to inge
 
 ## 🧰 Tech Stack
 
-- Java 17+
+- Java 21
 - Spring Boot
 - Thymeleaf (for UI)
 - Apache Commons CSV
