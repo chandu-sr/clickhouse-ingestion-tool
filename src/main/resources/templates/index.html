@@ -1,62 +1,132 @@
-<!-- src/main/resources/templates/index.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="${title}">ClickHouse Ingestion Tool</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ClickHouse Ingestion Tool</title>
+    <link rel="stylesheet" th:href="@{/styles.css}"/>
 </head>
 <body>
-<h1 th:text="${title}">ClickHouse ↔ Flat File Ingestion Tool</h1>
+<div class="container">
+    <div class="header">
+        <h1>ClickHouse Ingestion Tool</h1>
+        <p>Seamlessly transfer data between CSV and ClickHouse</p>
+    </div>
 
-<!-- Show status message -->
-<div th:if="${message}">
-    <p th:text="${message}"></p>
-</div>
-
-<!-- STEP 1: Upload CSV + connection info -->
-<form method="post" action="/preview-columns" enctype="multipart/form-data">
-    <label>Direction:</label>
-    <select name="direction" required>
-        <option value="csv-to-clickhouse">CSV to ClickHouse</option>
-    </select>
-    <br/><br/>
-
-    <label>CSV File:</label>
-    <input type="file" name="file" required/>
-    <br/><br/>
-
-    <label>ClickHouse URL:</label>
-    <input type="text" name="clickhouseUrl" value="http://localhost:8123" required/>
-    <br/><br/>
-
-    <label>JWT Token (optional):</label>
-    <input type="text" name="jwt"/>
-    <br/><br/>
-
-    <button type="submit">Next: Choose Columns</button>
-</form>
-
-<hr/>
-
-<!-- STEP 2: Show only if headers and fileName exist -->
-<div th:if="${headers != null} and ${fileName != null}">
-    <form method="post" action="/ingest">
-        <input type="hidden" name="direction" th:value="${direction}"/>
-        <input type="hidden" name="clickhouseUrl" th:value="${clickhouseUrl}"/>
-        <input type="hidden" name="jwt" th:value="${jwt}"/>
-        <input type="hidden" name="fileName" th:value="${fileName}"/>
-
-        <p>Select columns to ingest:</p>
-        <div th:each="header : ${headers}">
-            <label>
-                <input type="checkbox" name="selectedColumns" th:value="${header}" checked/>
-                <span th:text="${header}">Column</span>
-            </label><br/>
+    <div class="content">
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <a href="/view-data">View Ingested Data</a>
+            <a th:href="@{/export-csv(table=${selectedTable ?: 'users'})}">Export CSV</a>
+            <form method="post" th:action="@{/delete-data(table=${selectedTable ?: 'users'})}" style="display: inline; margin-left: 10px;">
+                <button type="submit" style="background: #eb5757; border-radius: 6px; color: white; padding: 10px 18px; border: none; cursor: pointer;">Delete Data</button>
+            </form>
         </div>
 
-        <br/>
-        <button type="submit">Ingest Selected Columns</button>
-    </form>
-</div>
+        <!-- Status Message -->
+        <div th:if="${message}" class="message" th:classappend="${message.contains('✅') ? 'success' : 'error'}">
+            <p th:text="${message}"></p>
+        </div>
 
+        <!-- STEP 1: Upload CSV Form -->
+        <div class="section">
+            <h2 class="section-title"> Step 1: Upload CSV File</h2>
+            <form method="post" action="/preview-columns" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Direction:</label>
+                    <select name="direction" required>
+                        <option value="csv-to-clickhouse"> CSV to ClickHouse</option>
+                        <option value="clickhouse-to-csv"> ClickHouse to CSV</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>CSV File:</label>
+                    <input type="file" name="file" accept=".csv" required/>
+                </div>
+
+                <div class="form-group">
+                    <label>ClickHouse URL:</label>
+                    <input type="text" name="clickhouseUrl" value="http://localhost:8123" required/>
+                </div>
+
+                <div class="form-group">
+                    <label>JWT Token (Optional):</label>
+                    <input type="text" name="jwt" placeholder="Leave empty for Basic Auth"/>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit">Next: Choose Columns →</button>
+                </div>
+            </form>
+        </div>
+
+        <hr/>
+
+        <!-- STEP 2: Column Selection -->
+        <div class="section" th:if="${headers != null and fileName != null}">
+            <h2 class="section-title"> Step 2: Select Columns to Ingest</h2>
+            <form method="post" action="/ingest">
+                <input type="hidden" name="direction" th:value="${direction}"/>
+                <input type="hidden" name="clickhouseUrl" th:value="${clickhouseUrl}"/>
+                <input type="hidden" name="jwt" th:value="${jwt}"/>
+                <input type="hidden" name="fileName" th:value="${fileName}"/>
+
+                <div class="form-group">
+                    <label>Table Name:</label>
+                    <input type="text" name="tableName" th:value="${tableName}" required/>
+                    <p style="font-size: 13px; color: #666; margin-top: 6px;">A new ClickHouse table will be created for this CSV upload.</p>
+                </div>
+
+                <p style="margin-bottom: 15px; color: #666;">Found <strong th:text="${headers.size()}"></strong> columns. Select the ones you want to ingest:</p>
+                
+                <div class="checkbox-group">
+                    <label th:each="header : ${headers}">
+                        <input type="checkbox" name="selectedColumns" th:value="${header}" checked/>
+                        <span th:text="${header}">Column</span>
+                    </label>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit"> Ingest Selected Columns</button>
+                </div>
+            </form>
+        </div>
+
+        <hr/>
+
+        <!-- View Data Section -->
+        <div class="section">
+            <h2 class="section-title"> View Ingested Data</h2>
+            
+            <form method="get" action="/view-data" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <label>Select Table:</label>
+                    <select name="table" onchange="this.form.submit()">
+                        <option value="">-- Select a table --</option>
+                        <option th:each="table : ${tables ?: {}}" th:value="${table}" th:selected="${table == selectedTable}" th:text="${table}"></option>
+                    </select>
+                </div>
+            </form>
+
+            <div th:if="${dataRows != null and dataRows.size() > 0}">
+                <p style="margin-bottom: 15px; color: #666;">Showing <strong th:text="${dataRows.size()}"></strong> rows from table '<strong th:text="${selectedTable}"></strong>'</p>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th th:each="col : ${dataRows[0]}" th:text="${col}"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="row : ${dataRows}">
+                            <td th:each="col : ${row}" th:text="${col}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
